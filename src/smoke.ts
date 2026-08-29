@@ -6,6 +6,7 @@ import type { ProcessRecord } from "./types.js";
 
 const processNumber = process.env.PJE_SMOKE_PROCESS ?? "0006388-48.1986.4.05.8401";
 const outputDir = await mkdtemp(join(tmpdir(), "trf5-pje-smoke-"));
+let traversedDocumentPages = false;
 
 try {
   const summary = await runScraper({
@@ -20,14 +21,19 @@ try {
     outputDir,
     skipPdfs: false,
     timeoutMs: 30_000
+  }, (message) => {
+    console.log(message);
+    traversedDocumentPages ||= /página de documentos 2\/\d+/.test(message);
   });
 
   if (summary.truncated
+    || summary.searchResultCount !== 1
     || summary.processedProcesses !== 1
     || summary.processErrors.length > 0
-    || summary.discoveredDocuments === 0
+    || summary.discoveredDocuments < 30
     || summary.downloadedPdfs !== 1
-    || summary.failedPdfs > 0) {
+    || summary.failedPdfs > 0
+    || !traversedDocumentPages) {
     throw new Error(`Resultado live inesperado: ${JSON.stringify(summary)}`);
   }
 
@@ -41,7 +47,9 @@ try {
   const downloaded = record.documents
     .flatMap((document) => document.pdfs)
     .find((pdf) => pdf.status === "downloaded");
-  if (record.movements.length === 0 || !downloaded?.file) {
+  if (record.documents.length !== summary.discoveredDocuments
+    || record.movements.length === 0
+    || !downloaded?.file) {
     throw new Error("La prueba live no extrajo movimientos y un PDF");
   }
   const signature = (await readFile(join(outputDir, downloaded.file))).subarray(0, 5).toString("ascii");

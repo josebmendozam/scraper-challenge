@@ -63,6 +63,13 @@ test("parses search rows and detects the server hard cap", () => {
   `, baseUrl);
   assert.equal(completeResponse.results.length, 30);
   assert.equal(completeResponse.truncated, false);
+
+  const movedWarningResponse = parseSearchResponse(`
+    <p>Sua consulta retornou muitos processos e somente os 30 primeiros serão exibidos.</p>
+    <table id="fPP:processosTable"><tbody>${rows}</tbody></table>
+    <span>30 resultados encontrados</span>
+  `, baseUrl);
+  assert.equal(movedWarningResponse.truncated, true);
 });
 
 test("parses detail fields, parties, movements, document resources, and pager", () => {
@@ -118,6 +125,23 @@ test("builds the exact RichFaces slider payload", () => {
   assert.equal(fields.get("AJAXREQUEST"), "j_id1:panel");
   assert.equal(fields.get("j_id1:slider"), "2");
   assert.equal(fields.get("j_id1:event"), "j_id1:event");
+});
+
+test("rejects an incomplete RichFaces slider instead of losing pages", () => {
+  const html = `
+    <div class="rich-panel-body">
+      <table id="j_id1:processoDocumentoGridTab"><tbody></tbody></table>
+      <form id="j_id1:pageForm" action="/detail">
+        <input class="rich-inslider-field" id="j_id1:sliderInput" name="j_id1:slider" value="1">
+        <input name="javax.faces.ViewState" value="j_id9">
+      </form>
+    </div>
+  `;
+
+  assert.throws(
+    () => parsePager(html, baseUrl, "processoDocumentoGridTab"),
+    /No se pudo interpretar el paginador processoDocumentoGridTab/
+  );
 });
 
 test("parses the JSF form that generates a PDF from an HTML document", () => {

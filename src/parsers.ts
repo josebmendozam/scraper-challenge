@@ -140,7 +140,8 @@ export function parseSearchResponse(html: string, pageUrl: string): SearchRespon
   ]).filter(Boolean);
   const pageText = normalizeText($.root().text());
   const resultCount = Number(/(\d+)\s+resultados? encontrados/i.exec(pageText)?.[1] ?? results.length);
-  const truncated = messages.some((message) => /somente os 30 primeiros/i.test(message))
+  const truncated = /somente os 30 primeiros/i.test(pageText)
+    || messages.some((message) => /somente os 30 primeiros/i.test(message))
     || resultCount > results.length;
   const viewState = $("input[name='javax.faces.ViewState']").last().attr("value");
 
@@ -299,7 +300,7 @@ export function parsePager(
     .get()
     .find((text) => text.includes("new Richfaces.Slider") && text.includes(sliderBaseId));
   if (!scriptText) {
-    return undefined;
+    throw new Error(`No se pudo interpretar el paginador ${tableSuffix}: falta su configuración`);
   }
   const script = normalizeJavascript(scriptText);
   const formId = form.attr("id");
@@ -317,7 +318,7 @@ export function parsePager(
   if (!formId || !sliderName || !eventId || !containerId || !viewState
     || !Number.isSafeInteger(maxPage) || maxPage < 1
     || !Number.isSafeInteger(page) || page < 1) {
-    return undefined;
+    throw new Error(`No se pudo interpretar el paginador ${tableSuffix}: configuración incompleta`);
   }
 
   return {
