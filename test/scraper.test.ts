@@ -12,7 +12,9 @@ const processNumber = "0000001-00.2026.4.05.8000";
 test("records an exhausted 429 and continues with the next PDF", async () => {
   const outputDir = await mkdtemp(join(tmpdir(), "pje-scraper-test-"));
   let limitedCalls = 0;
-  const server = createServer((request, response) => {
+  let documentPageCalls = 0;
+  let movementPageCalls = 0;
+  const server = createServer(async (request, response) => {
     const url = new URL(request.url ?? "/", "http://localhost");
     if (request.method === "GET" && url.pathname.endsWith("/ConsultaPublica/listView.seam")) {
       sendHtml(response, searchForm());
@@ -23,6 +25,22 @@ test("records an exhausted 429 and continues with the next PDF", async () => {
       return;
     }
     if (url.pathname.endsWith("/DetalheProcessoConsultaPublica/listView.seam")) {
+      if (request.method === "POST") {
+        const fields = new URLSearchParams(await requestBody(request));
+        if (fields.get("AJAXREQUEST") === "detail:documentPanel") {
+          documentPageCalls += 1;
+          sendHtml(response, documentPage());
+          return;
+        }
+        if (fields.get("AJAXREQUEST") === "detail:movementPanel") {
+          movementPageCalls += 1;
+          sendHtml(response, movementPage());
+          return;
+        }
+        response.writeHead(400);
+        response.end();
+        return;
+      }
       sendHtml(response, processDetail());
       return;
     }
@@ -60,6 +78,8 @@ test("records an exhausted 429 and continues with the next PDF", async () => {
     }, () => undefined);
 
     assert.equal(limitedCalls, 2);
+    assert.equal(documentPageCalls, 1);
+    assert.equal(movementPageCalls, 1);
     assert.equal(summary.processedProcesses, 1);
     assert.equal(summary.discoveredDocuments, 2);
     assert.equal(summary.failedPdfs, 1);
@@ -77,6 +97,7 @@ test("records an exhausted 429 and continues with the next PDF", async () => {
     const record = JSON.parse(
       await readFile(join(outputDir, "processes", recordName), "utf8")
     ) as ProcessRecord;
+    assert.equal(record.movements.length, 2);
     assert.deepEqual(
       record.documents.flatMap((document) => document.pdfs.map((pdf) => pdf.status)),
       ["failed", "downloaded"]
@@ -98,6 +119,14 @@ test("records an exhausted 429 and continues with the next PDF", async () => {
 function sendHtml(response: ServerResponse, html: string): void {
   response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
   response.end(html);
+}
+
+async function requestBody(request: AsyncIterable<Buffer>): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of request) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 function searchForm(): string {
@@ -128,16 +157,55 @@ function searchResults(): string {
 
 function processDetail(): string {
   return `
-    <form id="detail">
+    <form id="detail:fields">
       <div class="propertyView"><div class="name">Número Processo</div><div class="value">${processNumber}</div></div>
-      <table id="detail:processoPartesPoloAtivoResumidoList"><tbody></tbody></table>
-      <table id="detail:processoPartesPoloPassivoResumidoList"><tbody></tbody></table>
-      <table id="detail:processoParteOutrosInteressadosResumidoList"><tbody></tbody></table>
+    </form>
+    <table id="detail:processoPartesPoloAtivoResumidoList"><tbody></tbody></table>
+    <table id="detail:processoPartesPoloPassivoResumidoList"><tbody></tbody></table>
+    <table id="detail:processoParteOutrosInteressadosResumidoList"><tbody></tbody></table>
+    <div class="rich-panel-body">
       <table id="detail:processoEvento"><tbody><tr class="rich-table-row"><td>01/08/2026 10:00:00 - Movimento</td></tr></tbody></table>
+      ${pager("movement", 1)}
+    </div>
+    <div class="rich-panel-body">
       <table id="detail:processoDocumentoGridTab"><tbody>
         <tr class="rich-table-row"><td><a href="/pdf/limited?idBin=11&amp;idProcessoDocumento=101">01/08/2026 10:00:00 - Primeiro (Documento)</a></td></tr>
+      </tbody></table>
+      ${pager("document", 1)}
+    </div>
+  `;
+}
+
+function documentPage(): string {
+  return `
+    <div class="rich-panel-body">
+      <table id="detail:processoDocumentoGridTab"><tbody>
         <tr class="rich-table-row"><td><a href="/pdf/complete?idBin=12&amp;idProcessoDocumento=102">01/08/2026 10:01:00 - Segundo (Documento)</a></td></tr>
       </tbody></table>
+      ${pager("document", 2)}
+    </div>
+  `;
+}
+
+function movementPage(): string {
+  return `
+    <div class="rich-panel-body">
+      <table id="detail:processoEvento"><tbody><tr class="rich-table-row"><td>01/08/2026 11:00:00 - Segundo movimento</td></tr></tbody></table>
+      ${pager("movement", 2)}
+    </div>
+  `;
+}
+
+function pager(kind: "document" | "movement", page: number): string {
+  const formId = `detail:${kind}Form`;
+  const sliderId = `detail:${kind}Slider`;
+  const eventId = `detail:${kind}Event`;
+  const panelId = `detail:${kind}Panel`;
+  return `
+    <form id="${formId}" action="/pjeconsulta/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam">
+      <input class="rich-inslider-field" id="${sliderId}Input" name="${sliderId}" value="${page}">
+      <input name="javax.faces.ViewState" value="state-${kind}-${page}">
     </form>
+    <script>new Richfaces.Slider("${sliderId}",{'maxValue':'2','sliderValue':'${page}','onchange':'A4J.AJAX.Submit('${formId}',event,{'similarityGroupingId':'${eventId}','actionUrl':'/pjeconsulta/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam','containerId':'${panelId}'})'})</script>
   `;
 }

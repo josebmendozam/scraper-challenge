@@ -123,6 +123,7 @@ Una página de login, un error inesperado o HTML recibido durante una descarga n
 npm run lint
 npm test
 npm run check
+npm run smoke
 ```
 
-Las pruebas usan fixtures sanitizados y servidores HTTP locales. No realizan un scrape completo ni descargan información judicial durante CI.
+`npm run check` usa fixtures sanitizados y servidores HTTP locales. `npm run smoke` es una comprobación manual contra el portal real: recorre páginas, descarga y valida un PDF en un directorio temporal, y elimina la salida al terminar.
