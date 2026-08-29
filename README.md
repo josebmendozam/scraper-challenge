@@ -4,7 +4,7 @@ Scraper browserless en TypeScript para la consulta pública del PJe del Tribunal
 
 ## Requisitos
 
-- Node.js 20.18.1 o superior
+- Node.js 20.19+, 22.13+ o 24+
 - npm 10 o superior
 - Acceso HTTPS a `pjett.trf5.jus.br`
 
