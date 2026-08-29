@@ -230,6 +230,7 @@ async function extractProcess(
   let movements = [...detail.movements];
   let movementPager = detail.movementPager;
   if (movementPager && movementPager.maxPage > 1) {
+    // Both sliders mutate the same JSF view state, so reload before switching from documents to movements.
     if (detail.documentPager && detail.documentPager.maxPage > 1) {
       const reset = await client.getText(result.detailUrl, referer);
       assertSuccessfulPage(reset, "No fue posible restablecer el detalle para paginar movimientos");
@@ -411,6 +412,7 @@ async function fetchPdf(
         documentPage.finalUrl
       );
     } catch {
+      // A missing Gerar PDF action is treated as transient so the normal retry policy can try the generated page again.
       return {
         status: 503,
         headers: documentPage.headers,

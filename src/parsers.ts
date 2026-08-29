@@ -31,6 +31,7 @@ export function parseSearchForm(html: string, pageUrl: string): SearchFormState 
     throw new Error("No se encontró la acción JSF de búsqueda");
   }
 
+  // The portal renders reCAPTCHA code even when disabled behind if(false), so script presence alone is not activation.
   const captchaScript = $("script")
     .map((_, element) => $(element).text())
     .get()
@@ -306,6 +307,7 @@ export function parsePager(
   if (slider.length === 0) {
     return undefined;
   }
+  // RichFaces 3 stores pager request identifiers in generated JavaScript instead of ordinary form controls.
   const form = slider.closest("form");
   const sliderBaseId = (slider.attr("id") ?? "").replace(/Input$/, "");
   const scriptText = scope.find("script")
