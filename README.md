@@ -19,11 +19,13 @@ npm run build
 
 ## Ejecución
 
-La forma más confiable de obtener un conjunto completo es buscar un número CNJ exacto:
+Para extraer un proceso completo, usa su número CNJ:
 
 ```bash
 npm run scrape -- --process 0006388-48.1986.4.05.8401
 ```
+
+Sin opciones de límite, este comando recorre todas las páginas de movimientos y documentos del proceso y descarga todos los PDFs asociados que expone el portal.
 
 También se puede consultar por fecha de autuación:
 
@@ -31,7 +33,7 @@ También se puede consultar por fecha de autuación:
 npm run scrape -- --from 01/08/2026 --to 01/08/2026
 ```
 
-Una demostración acotada que extrae un proceso y descarga un PDF:
+Las opciones `--max-processes` y `--max-downloads` solo sirven para hacer una prueba acotada; no forman parte de una ejecución completa:
 
 ```bash
 npm run scrape -- \
