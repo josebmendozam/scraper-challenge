@@ -140,7 +140,7 @@ export function parseSearchResponse(html: string, pageUrl: string): SearchRespon
   const pageText = normalizeText($.root().text());
   const resultCount = Number(/(\d+)\s+resultados? encontrados/i.exec(pageText)?.[1] ?? results.length);
   const truncated = messages.some((message) => /somente os 30 primeiros/i.test(message))
-    || results.length >= 30;
+    || resultCount > results.length;
   const viewState = $("input[name='javax.faces.ViewState']").last().attr("value");
 
   return {

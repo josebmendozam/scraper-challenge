@@ -56,6 +56,13 @@ test("parses search rows and detects the server hard cap", () => {
   assert.equal(response.results[0]?.className, "APELAÇÃO CÍVEL");
   assert.equal(response.results[0]?.partySummary, "PARTE A X PARTE B");
   assert.equal(response.truncated, true);
+
+  const completeResponse = parseSearchResponse(`
+    <table id="fPP:processosTable"><tbody>${rows}</tbody></table>
+    <span>30 resultados encontrados</span>
+  `, baseUrl);
+  assert.equal(completeResponse.results.length, 30);
+  assert.equal(completeResponse.truncated, false);
 });
 
 test("parses detail fields, parties, movements, document resources, and pager", () => {
