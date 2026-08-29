@@ -253,7 +253,7 @@ function isDownloadFailure(value: unknown): value is DownloadFailure {
     && typeof value.processId === "string"
     && typeof value.processNumber === "string"
     && typeof value.documentId === "string"
-    && (value.kind === "document" || value.kind === "generated" || value.kind === "receipt")
+    && (value.kind === "document" || value.kind === "generated")
     && typeof value.title === "string"
     && Number.isInteger(value.attempts)
     && (value.httpStatus === undefined || Number.isInteger(value.httpStatus))

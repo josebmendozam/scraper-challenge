@@ -257,22 +257,6 @@ export function parseDocumentRows(html: string, pageUrl: string): DocumentDiscov
       });
     }
 
-    const receiptControl = rowSelection
-      .find("a[onclick*='reportReciboPDF.seam'], a[onclick*='reportCertidaoPDF.seam'], a[href*='reportReciboPDF.seam'], a[href*='reportCertidaoPDF.seam']")
-      .first();
-    const receiptUrl = receiptControl.attr("href")?.includes("report")
-      ? receiptControl.attr("href")
-      : extractReportUrl(receiptControl.attr("onclick") ?? "");
-    if (receiptUrl) {
-      resources.push({
-        id: `${documentId}:receipt`,
-        kind: "receipt" as const,
-        documentId,
-        title: `${parsed.title} - recibo`,
-        sourceUrl: resolveCleanUrl(receiptUrl, pageUrl)
-      });
-    }
-
     documents.push({
       document: {
         documentId,
@@ -466,11 +450,6 @@ function extractPopupUrl(onclick: string, marker: string): string | undefined {
     .map((match) => match[1])
     .filter((value): value is string => value !== undefined);
   return candidates.find((value) => value.includes(marker));
-}
-
-function extractReportUrl(onclick: string): string | undefined {
-  const normalized = decodeJavascriptEscapes(onclick).replace(/&amp;/g, "&");
-  return /['"]([^'"]*report(?:Recibo|Certidao)PDF\.seam\?[^'"]+)['"]/i.exec(normalized)?.[1];
 }
 
 function extractSearchSource(script: string): string | undefined {

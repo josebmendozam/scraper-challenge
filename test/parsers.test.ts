@@ -96,7 +96,7 @@ test("parses detail fields, parties, movements, document resources, and pager", 
   assert.equal(detail.documents[0]?.document.sourceType, "binary");
   assert.equal(detail.documents[0]?.resources[0]?.kind, "document");
   assert.equal(detail.documents[1]?.resources[0]?.kind, "generated");
-  assert.equal(detail.documents[1]?.resources[1]?.kind, "receipt");
+  assert.equal(detail.documents[1]?.resources.length, 1);
   assert.equal(detail.documentPager?.maxPage, 2);
   assert.doesNotMatch(detail.documents[0]?.resources[0]?.sourceUrl ?? "", /jsessionid/);
 });
