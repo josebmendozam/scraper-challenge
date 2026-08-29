@@ -258,6 +258,26 @@ export function parseDocumentRows(html: string, pageUrl: string): DocumentDiscov
       });
     }
 
+    const receiptControl = rowSelection
+      .find("a[onclick*='reportReciboPDF.seam'], a[href*='reportReciboPDF.seam']")
+      .first();
+    const receiptSource = receiptControl.attr("href")?.includes("reportReciboPDF.seam")
+      ? receiptControl.attr("href")
+      : extractPopupUrl(receiptControl.attr("onclick") ?? "", "reportReciboPDF.seam");
+    if (receiptSource) {
+      const receiptUrl = resolveCleanUrl(receiptSource, pageUrl);
+      const parameters = new URL(receiptUrl).searchParams;
+      if (["idBin", "idProcessoDoc", "idProcessoTrf"].every((name) => parameters.has(name))) {
+        resources.push({
+          id: `${documentId}:receipt`,
+          kind: "receipt" as const,
+          documentId,
+          title: `${parsed.title} - recibo`,
+          sourceUrl: receiptUrl
+        });
+      }
+    }
+
     documents.push({
       document: {
         documentId,

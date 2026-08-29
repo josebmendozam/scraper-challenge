@@ -85,7 +85,7 @@ test("parses detail fields, parties, movements, document resources, and pager", 
     <div class="rich-panel-body">
       <table id="j_id146:processoDocumentoGridTab"><tbody>
         <tr class="rich-table-row"><td><a href="/pjeconsulta/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam;jsessionid=secret?idBin=11&amp;idProcessoDocumento=22&amp;actionMethod=x">01/08/2026 10:20:30 - Decisão (Decisão)</a></td><td></td></tr>
-        <tr class="rich-table-row"><td><a href="#" onclick="openPopUp('doc','/pjeconsulta/ConsultaPublica/DetalheProcessoConsultaPublica/documentoSemLoginHTML.seam?ca=opaque&amp;idProcessoDoc=33')">02/08/2026 11:00:00 - Despacho (Despacho)</a></td><td><a onclick="openPopUp('recibo','/pjeconsulta/Processo/reportReciboPDF.seam?idProcessoDoc=33')">Recibo</a></td></tr>
+        <tr class="rich-table-row"><td><a href="#" onclick="openPopUp('doc','/pjeconsulta/ConsultaPublica/DetalheProcessoConsultaPublica/documentoSemLoginHTML.seam?ca=opaque&amp;idProcessoDoc=33')">02/08/2026 11:00:00 - Despacho (Despacho)</a></td><td><a onclick="openPopUp('recibo','/pjeconsulta/Processo/reportReciboPDF.seam?idBin=44&amp;idProcessoDoc=33&amp;idProcessoTrf=55')">Recibo</a><a onclick="openPopUp('certidao','/pjeconsulta/Processo/reportCertidaoPDF.seam?idProcessoDoc=33')">Certidão</a></td></tr>
       </tbody></table>
       <form id="j_id146:j_id653" action="/pjeconsulta/ConsultaPublica/DetalheProcessoConsultaPublica/listView.seam">
         <input class="rich-inslider-field" id="j_id146:j_id653:j_id654Input" name="j_id146:j_id653:j_id654" value="1">
@@ -103,7 +103,8 @@ test("parses detail fields, parties, movements, document resources, and pager", 
   assert.equal(detail.documents[0]?.document.sourceType, "binary");
   assert.equal(detail.documents[0]?.resources[0]?.kind, "document");
   assert.equal(detail.documents[1]?.resources[0]?.kind, "generated");
-  assert.equal(detail.documents[1]?.resources.length, 1);
+  assert.equal(detail.documents[1]?.resources[1]?.kind, "receipt");
+  assert.equal(detail.documents[1]?.resources.length, 2);
   assert.equal(detail.documentPager?.maxPage, 2);
   assert.doesNotMatch(detail.documents[0]?.resources[0]?.sourceUrl ?? "", /jsessionid/);
 });

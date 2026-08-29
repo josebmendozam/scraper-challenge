@@ -42,7 +42,7 @@ export interface MovementRecord {
   cells: string[];
 }
 
-export type PdfKind = "document" | "generated";
+export type PdfKind = "document" | "generated" | "receipt";
 
 export interface PdfResource {
   id: string;
